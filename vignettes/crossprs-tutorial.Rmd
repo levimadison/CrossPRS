@@ -1,0 +1,220 @@
+---
+title: "crossprs-tutorial"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{crossprs-tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(CrossPRS)
+```
+
+# Introduction
+
+CrossPRS constructs and tests polygenic risk scores (PRS) using GWAS summary
+statistics. It is designed for Neale Lab UK Biobank GWAS summary statistics and
+estimates the association between a PRS and a target phenotype without requiring
+individual-level genotype or phenotype data.
+
+The basic workflow is:
+
+1. Obtain source and target GWAS summary statistics.
+2. Select source-GWAS SNPs and construct PRS weights.
+3. Align the PRS variants with the target GWAS and test the association.
+
+# Installation and loading
+
+Install CrossPRS from GitHub, replacing `YOUR_GITHUB_USERNAME` with the GitHub
+account or organization that hosts the package:
+
+```{r install, eval=FALSE}
+install.packages("remotes")
+remotes::install_github("YOUR_GITHUB_USERNAME/CrossPRS")
+```
+
+Load the package:
+
+```{r load-package}
+library(CrossPRS)
+```
+
+# Find phenotype codes and GWAS files
+
+The `download_neale_gwas()` function uses a Neale Lab UK Biobank GWAS phenotype
+code. The UKBB GWAS Imputed v3 file manifest provides phenotype codes,
+descriptions, available files, and summary-statistic column annotations:
+
+<https://docs.google.com/spreadsheets/d/1kvPoupSzsSFBNSztMzl04xMoSC3Kcx3CrjVf4yBmESU>
+
+The summary-statistics files are provided in bgzip-compressed formats such as
+`.bgz` or `.bgz.gz`.
+
+# Download GWAS summary statistics
+
+The `sex_groups` argument supports `"both_sexes"`, `"female"`, and `"male"`. If
+it is omitted, the documented default is to download all three groups.
+
+For example, download both-sexes summary statistics for a phenotype:
+
+```{r download, eval=FALSE}
+download_neale_gwas(
+  pheno_code = "100011_raw",
+  sex_groups = "both_sexes",
+  dest_dir = "gwas_data"
+)
+```
+
+To request female- and male-specific results instead:
+
+```{r download-sex-specific, eval=FALSE}
+download_neale_gwas(
+  pheno_code = "100011_raw",
+  sex_groups = c("female", "male"),
+  dest_dir = "gwas_data"
+)
+```
+
+After downloading, identify the source and target files to use in the next
+steps. The file names and phenotype codes should reflect your analysis.
+
+# Configure OpenGWAS authentication
+
+`build_prs_weights()` uses the **ieugwasr** package to query the OpenGWAS API. A
+valid OpenGWAS JSON Web Token may be needed for operations involving that API.
+
+Check whether a token is configured:
+
+```{r check-jwt, eval=FALSE}
+ieugwasr::get_opengwas_jwt()
+```
+
+If you need a token, obtain one from <https://api.opengwas.io>. You can edit
+your `.Renviron` file from R:
+
+```{r edit-renviron, eval=FALSE}
+usethis::edit_r_environ()
+```
+
+Add the following line, using your own token, save the file, and restart R:
+
+```text
+OPENGWAS_JWT="your_new_JWT_token"
+```
+
+Never commit your token or other credentials to GitHub.
+
+# Build PRS SNP weights
+
+`build_prs_weights()` selects SNPs from the source GWAS using a p-value
+threshold, matches them to the SNP annotation file, and writes a PRS weight
+file.
+
+The annotation file should contain the variant and allele information required
+by the function. The `pop` argument selects the reference population used for
+identifying independent SNPs. Documented population options include `"EUR"`,
+`"SAS"`, `"EAS"`, `"AFR"`, and `"AMR"`.
+
+```{r build-weights, eval=FALSE}
+build_prs_weights(
+  s_bgzfile = "gwas_data/path_to_source_gwas.bgz",
+  p_threshold = 5e-8,
+  annfile = "path/to/snp_annotation.txt",
+  w_outfile = "prs_weights.txt",
+  pop = "EUR"
+)
+```
+
+Here, `5e-8` is an example threshold for selecting genome-wide significant
+variants. Choose the threshold and reference population appropriate for your
+analysis.
+
+# Test PRS association in a target GWAS
+
+Use `test_prs_association()` to match the PRS variants to a target GWAS, align
+alleles, and estimate the PRS association from summary statistics.
+
+The `weight` argument selects the weighting method:
+
+- `"beta"` uses the source-GWAS effect estimate.
+- `"z"` uses the source-GWAS effect estimate divided by its standard error.
+- `"max"` uses the effect estimate divided by the standard error squared and the
+  genotype variance term.
+
+For the `"max"` option, refer to the function help for the exact allele
+frequency used by your installed version of CrossPRS.
+
+```{r test-association, eval=FALSE}
+result <- test_prs_association(
+  w_snpfile = "prs_weights.txt",
+  t_bgzfile = "gwas_data/path_to_target_gwas.bgz",
+  weight = "z"
+)
+
+result
+```
+
+The function returns a named vector containing:
+
+- `nsnps`: number of SNPs included in the analysis;
+- `effect_est`: estimated PRS effect on the target phenotype;
+- `effect_se`: standard error of the estimated PRS effect;
+- `Z_a`: test statistic for the null hypothesis that the PRS effect is zero;
+- `p_value`: two-sided p-value for the association test.
+
+The function matches SNPs between the weight and target files, aligns effect
+alleles, and excludes variants whose alleles do not match or swap between the
+files.
+
+# Core calculation
+
+The package's `prs_assoc_core()` function performs the core summary-statistics
+calculation using SNP weights, SNP variances, target-GWAS effect estimates, and
+variances of those effect estimates. It returns an estimated PRS effect,
+standard error, Z statistic, and p-value.
+
+See the function help for the exact argument names and expected inputs:
+
+```{r core-help, eval=FALSE}
+?prs_assoc_core
+```
+
+# Troubleshooting
+
+## OpenGWAS authentication
+
+If a function that queries the OpenGWAS API reports an authentication error,
+check that your token is valid and that `OPENGWAS_JWT` is available in the
+current R session. Restart R after editing `.Renviron`.
+
+## Input files
+
+Confirm that the source and target summary-statistics files are the appropriate
+Neale Lab files and are in a supported bgzip-compressed format. Check the file
+manifest for phenotype codes and column annotations.
+
+## Variant matching
+
+The PRS and target GWAS must contain matching variant identifiers and compatible
+allele information. The association function aligns matching alleles and removes
+variants with incompatible allele pairs.
+
+# Further help
+
+See the package help pages for details about function arguments and return
+values:
+
+```{r help-pages, eval=FALSE}
+?download_neale_gwas
+?build_prs_weights
+?test_prs_association
+?prs_assoc_core
+```

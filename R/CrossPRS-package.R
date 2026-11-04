@@ -1,0 +1,159 @@
+#' CrossPRS: Cross-GWAS Polygenic Risk Score Analysis
+#'
+#' Tools for constructing and testing polygenic risk scores (PRS) using
+#' GWAS summary statistics.
+#'
+#' @description
+#' The \pkg{CrossPRS} package provides tools for performing polygenic risk
+#' score (PRS) analyses using GWAS summary statistics from the Neale Lab
+#' UK Biobank GWAS resource. The package is designed to construct SNP
+#' weights from a source GWAS and use those weights to test the association
+#' of the resulting PRS with a target phenotype using target GWAS summary
+#' statistics.
+#'
+#' Unlike conventional PRS analyses that require individual-level genotype
+#' and phenotype data, \pkg{CrossPRS} implements a summary-statistics-based
+#' PRS association method that estimates the effect of a PRS on a target
+#' phenotype directly from GWAS summary statistics.
+#'
+#' @section Main workflow:
+#'
+#' The typical \pkg{CrossPRS} workflow consists of the following steps:
+#'
+#' \enumerate{
+#'   \item Download Neale Lab UK Biobank GWAS summary statistics using
+#'   [download_neale_gwas()].
+#'
+#'   \item Select significant SNPs from a source GWAS and generate their
+#'   effect-size weights using [build_prs_weights()].
+#'
+#'   \item Use the generated SNP weights and a target GWAS summary statistics
+#'   file to test the association between the PRS and the target phenotype
+#'   using [test_prs_association()].
+#'
+#'   \item The core summary-statistics PRS association calculation is
+#'   performed by [prs_assoc_core()].
+#' }
+#'
+#' @section Main functions:
+#'
+#' \describe{
+#'   \item{\code{download_neale_gwas()}}{
+#'   Downloads Neale Lab UK Biobank GWAS summary statistics for a specified
+#'   phenotype and sex group.
+#'   }
+#'
+#'   \item{\code{build_prs_weights()}}{
+#'   Selects SNPs from a source GWAS according to a user-specified p-value
+#'   threshold and generates SNP effect-size weights for PRS analysis.
+#'   }
+#'
+#'   \item{\code{test_prs_association()}}{
+#'   Tests the association between a PRS and a target phenotype using
+#'   target GWAS summary statistics.
+#'   }
+#'
+#'   \item{\code{prs_assoc_core()}}{
+#'   Implements the core summary-statistics PRS association method using
+#'   SNP weights, SNP variances, SNP effect estimates, and variances of
+#'   the SNP effect estimates.
+#'   }
+#' }
+#'
+#' @section Summary-statistics PRS method:
+#'
+#' The summary-statistics PRS method implemented in \pkg{CrossPRS} uses
+#' information from independent candidate SNPs to estimate the effect of
+#' a PRS on a target phenotype. The method uses SNP weights, SNP variances,
+#' target GWAS SNP effect estimates, and the corresponding variances of
+#' the effect estimates.
+#'
+#' The core method returns the estimated PRS effect, its standard error,
+#' Z statistic, and p-value. This allows PRS association analyses to be
+#' performed without access to individual-level genotype or phenotype data.
+#'
+#' @section Input data:
+#'
+#' The primary GWAS input data supported by \pkg{CrossPRS} are Neale Lab
+#' UK Biobank GWAS summary statistics in bgzip-compressed format, such as
+#' \code{.bgz} or \code{.bgz.gz} files.
+#'
+#' Users can identify phenotype codes, phenotype descriptions, and
+#' annotations of columns in the GWAS summary statistics using the
+#' UKBB GWAS Imputed v3 - File Manifest Release 20180731:
+#'
+#' \url{https://docs.google.com/spreadsheets/d/1kvPoupSzsSFBNSztMzl04xMoSC3Kcx3CrjVf4yBmESU}
+#'
+#' @section Sex-specific GWAS:
+#'
+#' Neale Lab UK Biobank GWAS summary statistics can be downloaded for
+#' different sex groups. \pkg{CrossPRS} supports:
+#'
+#' \itemize{
+#'   \item \code{both_sexes}: GWAS results based on both male and female
+#'   participants;
+#'   \item \code{female}: GWAS results based on female participants only;
+#'   \item \code{male}: GWAS results based on male participants only.
+#' }
+#'
+#' @section Authentication:
+#'
+#' The function [build_prs_weights()] uses the \pkg{ieugwasr} package when
+#' access to the OpenGWAS API is required. A valid OpenGWAS JSON Web Token
+#' may therefore be required for operations involving the OpenGWAS API.
+#'
+#' The current OpenGWAS JWT can be checked with:
+#'
+#' \preformatted{
+#' ieugwasr::get_opengwas_jwt()
+#' }
+#'
+#' If a valid token is not available, users can obtain a new token from:
+#'
+#' \url{https://api.opengwas.io}
+#'
+#' The token can be stored in the user's \code{.Renviron} file using:
+#'
+#' \preformatted{
+#' usethis::edit_r_environ()
+#' }
+#'
+#' and adding:
+#'
+#' \preformatted{
+#' OPENGWAS_JWT="your_new_JWT_token"
+#' }
+#'
+#' Users should restart their R session after updating the
+#' \code{OPENGWAS_JWT} environment variable.
+#'
+#' @section Example workflow:
+#'
+#' A typical analysis can be performed as follows:
+#'
+#' \preformatted{
+#' ## 1. Download source and target GWAS summary statistics
+#' download_neale_gwas(
+#'   pheno_code = "100011_raw",
+#'   sex_groups = "both_sexes"
+#' )
+#'
+#' ## 2. Build SNP weights from the source GWAS
+#' build_prs_weights(
+#'   s_bgzfile = "source_gwas.bgz",
+#'   p_threshold = 5e-8,
+#'   annfile = "snp_annotation.txt",
+#'   w_outfile = "prs_weights.txt"
+#' )
+#'
+#' ## 3. Test PRS association with a target GWAS phenotype
+#' result <- test_prs_association(
+#'   w_snpfile = "prs_weights.txt",
+#'   t_bgzfile = "target_gwas.bgz"
+#' )
+#'
+#' result
+#' }
+#'
+#' @keywords internal
+"_PACKAGE"

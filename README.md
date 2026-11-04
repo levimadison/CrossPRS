@@ -1,0 +1,43 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+# CrossPRS: Cross-GWAS Polygenic Risk Score Analysis
+
+<!-- badges: start -->
+
+<!-- badges: end -->
+
+The **CrossPRS** R package provides tools for constructing and testing
+polygenic risk scores (PRS) using GWAS summary statistics from the Neale
+Lab UK Biobank GWAS resource.
+
+Unlike conventional PRS analyses that require individual-level genotype
+and phenotype data, **CrossPRS** implements a summary-statistics-based
+association method that estimates the effect of a PRS on a target
+phenotype directly from GWAS summary statistics.
+
+------------------------------------------------------------------------
+
+## Features
+
+- **Download Summary Statistics**: Fetch Neale Lab UK Biobank GWAS
+  summary statistics for specific phenotypes and sex groups
+  (`both_sexes`, `female`, `male`).
+- **Construct PRS Weights**: Select independent candidate SNPs at
+  user-defined p-value thresholds using OpenGWAS clumping and generate
+  SNP effect-size weights.
+- **Summary-Statistics PRS Association**: Test association between
+  source PRS and target phenotypes directly from compressed (`.bgz` /
+  `.bgz.gz`) summary statistics without individual-level data.
+- **Flexible Weight Schemes**: Choose between raw effect size
+  (`"beta"`), Z-statistic (`"z"`), or variance-scaled (`"max"`) weights.
+
+------------------------------------------------------------------------
+
+## Installation
+
+Install the development version of `CrossPRS` from GitHub:
+
+\`\`\`r \# install.packages(“remotes”)
+remotes::install_github(“<YOUR-GITHUB-USERNAME>/CrossPRS”,
+build_vignettes = TRUE)

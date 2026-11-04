@@ -1,0 +1,25 @@
+Package: CrossPRS
+Title: Cross-GWAS Polygenic Risk Score Analysis
+Version: 1.1.0
+Authors@R: 
+    person("Levi", "Mei", , "levimei88@gmail.com", role = c("aut", "cre"))
+Description: Provides tools for polygenic risk score (PRS) analysis using
+    genome-wide association study (GWAS) summary statistics. The package
+    supports downloading Neale Lab UK Biobank GWAS summary statistics,
+    constructing SNP weights from a source GWAS, and testing associations
+    between the resulting PRS and phenotypes in a target GWAS. It
+    implements a summary-statistics-based PRS association method that
+    estimates the PRS effect, standard error, Z statistic, and p-value
+    without requiring individual-level genotype or phenotype data.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports: 
+    curl,
+    data.table,
+    ieugwasr
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
