@@ -38,6 +38,8 @@ phenotype directly from GWAS summary statistics.
 
 Install the development version of `CrossPRS` from GitHub:
 
-\`\`\`r \# install.packages(“remotes”)
-remotes::install_github(“<YOUR-GITHUB-USERNAME>/CrossPRS”,
-build_vignettes = TRUE)
+``` r
+
+# install.packages("remotes")
+remotes::install_github("levimadison/CrossPRS", build_vignettes = TRUE)
+```

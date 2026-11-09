@@ -4,7 +4,7 @@
 \alias{test_prs_association}
 \title{Test PRS Association with a Target Neale Lab UK Biobank GWAS}
 \usage{
-test_prs_association(w_snpfile, t_bgzfile, z_weight = TRUE)
+test_prs_association(w_snpfile, t_bgzfile, weight = c("beta", "z", "max"))
 }
 \arguments{
 \item{w_snpfile}{Character string. Path to the PRS SNP weight file
@@ -16,8 +16,17 @@ UK Biobank GWAS summary statistics file in bgzip format (e.g.,
 \code{.bgz} or \code{.bgz.gz}). The file should contain GWAS summary statistics
 for the target phenotype.}
 
-\item{z_weight}{logical value. If it is TRUE, z statistic is used as weight.
-If it is FALSE, beta (effect) statistic is used as weight.}
+\item{weight}{Character string specifying how to calculate the PRS SNP
+weights. Must be one of:
+\describe{
+\item{\code{"beta"}}{Use the source GWAS effect estimate:
+\code{beta}.}
+\item{\code{"z"}}{Use the source GWAS Z statistic:
+\code{beta / se}. This is the default.}
+\item{\code{"max"}}{Use \code{beta / (se^2 * 2 * minor_AF * (1 - minor_AF))},
+where \code{minor_AF} is the source GWAS minor allele frequency.}
+}
+Defaults to \code{"beta"}.}
 }
 \value{
 A named vector containing:
@@ -41,15 +50,11 @@ The function reads a PRS SNP weight file and a target GWAS summary
 statistics file, aligns SNPs between the two datasets, and estimates the
 effect of the PRS on the target phenotype directly from GWAS summary
 statistics without requiring individual-level genotype or phenotype data.
-\subsection{Method}{
 
-This function implements the summary-statistics PRS association method
-developed in this package. It estimates the association between a PRS and
-a target phenotype directly from GWAS summary statistics, eliminating the
-need for individual-level genotype and phenotype data.
-}
-
-\subsection{Workflow}{
+The function estimates the association between a PRS and a target phenotype
+directly from GWAS summary statistics. It matches variants between the
+PRS weight file and the target GWAS, aligns effect alleles, and then
+estimates the PRS effect using the selected \code{weight} option.
 
 The function performs the following steps:
 \enumerate{
@@ -66,12 +71,12 @@ PRS effect, its standard error, Z statistic, and corresponding
 p-value.
 }
 }
-}
 \examples{
 \dontrun{
 prs_result <- test_prs_association(
   w_snpfile = "prs_weights.txt",
-  t_bgzfile = "target_gwas.txt.bgz"
+  t_bgzfile = "target_gwas.txt.bgz",
+  weight = "beta"
 )
 
 prs_result

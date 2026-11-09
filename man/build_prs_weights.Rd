@@ -2,7 +2,7 @@
 % Please edit documentation in R/build_prs_weights.R
 \name{build_prs_weights}
 \alias{build_prs_weights}
-\title{Build PRS SNP Weights from Source Neale Lab UK Biobank GWAS Results}
+\title{Build PRS SNP Weights from Neale Lab UK Biobank GWAS Results}
 \usage{
 build_prs_weights(
   s_bgzfile,
@@ -13,111 +13,151 @@ build_prs_weights(
 )
 }
 \arguments{
-\item{s_bgzfile}{Character string. Path to the compressed source Neale Lab
-UK Biobank GWAS summary statistics file in bgzip format (e.g.,
-\code{.bgz} or \code{.bgz.gz}). The file should contain SNP identifiers,
-effect alleles, effect size estimates, p-values, and other standard
-GWAS summary statistics.}
+\item{s_bgzfile}{Character string. Path to a downloaded, bgzip-compressed
+source Neale Lab UK Biobank GWAS summary statistics file, such as a
+\code{.tsv.bgz} file. The file should contain the summary-statistic
+columns required by this function. Use \code{\link[=download_neale_gwas]{download_neale_gwas()}} to
+download a phenotype file, or find its download link in the
+\code{Manifest 201807} sheet described in Details. Supply the downloaded
+file's local path to this argument.}
 
 \item{p_threshold}{Numeric value. P-value threshold used to select
-significant SNPs from the source GWAS summary statistics.
-For example, \code{5e-8} selects genome-wide significant variants.}
+significant SNPs from the source GWAS summary statistics. For example,
+\code{5e-8} selects variants with p-values below the genome-wide
+significance threshold.}
 
-\item{annfile}{Character string. Path to the SNP annotation file for
-Neale Lab UK Biobank GWAS summary statistics. The annotation file
-should contain SNP information required for PRS construction, including
-chromosome, genomic position, SNP identifier, and allele information.}
+\item{annfile}{Character string. Path to the downloaded Neale Lab variant
+annotation file. The file should contain the variant and allele
+information required by this function. The Neale Lab annotation file is
+named \code{variants.tsv.bgz} and is available at:
+\url{https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/annotations/variants.tsv.bgz}
 
-\item{w_outfile}{Character string. Path to the output file where the
-selected SNPs and their corresponding effect-size weights will be
-written. The output file serves as the SNP weight file for downstream
-PRS calculation.}
+Download the annotation file separately and supply its local path to
+this argument. This file is not the GWAS summary-statistics file
+downloaded by \code{\link[=download_neale_gwas]{download_neale_gwas()}}.}
 
-\item{pop}{Character string. The reference population for identifying independent SNPs}
+\item{w_outfile}{Character string. Path to the output file (text file) where the
+selected SNPs, annotation information, and corresponding GWAS
+summary statistics will be written. This file can be used by downstream PRS
+functions.}
+
+\item{pop}{Character string. Reference population used to identify
+independent SNPs. Supported values are \code{"EUR"}, \code{"SAS"},
+\code{"EAS"}, \code{"AFR"},  \code{"AMR"} and \code{"legacy"}.}
 }
 \value{
-A data frame containing the selected SNPs, annotation information, and
-corresponding effect-size weights. The SNP weight file specified by
+A data frame containing the selected SNPs, annotation information,
+and corresponding GWAS summary statistics. The SNP weight file specified by
 \code{w_outfile} is also written to disk.
 }
 \description{
 Extracts significant SNPs from a source Neale Lab UK Biobank GWAS summary
-statistics file, annotates the selected SNPs using a Neale Lab-compatible
-SNP annotation file, and generates a SNP weight file for downstream
-polygenic risk score (PRS) calculation in target Neale Lab UK Biobank GWAS
-datasets.
+statistics file, annotates the selected SNPs using a Neale Lab variant
+annotation file, and writes a SNP weight file for downstream polygenic
+risk score (PRS) analysis.
 }
 \details{
-The function applies a user-specified p-value threshold to identify
-significant SNPs from the source GWAS summary statistics, retrieves SNP
-annotation information, and saves SNP effect sizes as PRS weights. The
-resulting weight file can subsequently be used to calculate PRS in target
-GWAS datasets and evaluate associations between PRS and phenotypes.
+The source GWAS file can be obtained using \code{\link[=download_neale_gwas]{download_neale_gwas()}} or
+downloaded directly from the Neale Lab UK Biobank GWAS Imputed v3
+resources. The annotation file is a separate input.
+\subsection{Neale Lab input files}{
+
+The Neale Lab UK Biobank GWAS Imputed v3 File Manifest Release 20180731
+provides information about available GWAS files. Its \code{README} sheet
+describes the files, and its \code{Manifest 201807} sheet lists phenotype
+codes, phenotype descriptions, and download links:
+
+\url{https://docs.google.com/spreadsheets/d/1kvPoupSzsSFBNSztMzl04xMoSC3Kcx3CrjVf4yBmESU}
+
+For example, female-specific body mass index (BMI) summary-statistics
+files include:
+\itemize{
+\item \code{21001_irnt}: inverse rank normalized BMI:
+\url{https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/21001_irnt.gwas.imputed_v3.female.tsv.bgz}
+\item \code{21001_raw}: untransformed BMI:
+\url{https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/21001_raw.gwas.imputed_v3.female.tsv.bgz}
+}
+
+These are examples of direct download links. Use the manifest to find the
+file for the phenotype and sex group required by your analysis. Alternatively,
+use \code{\link[=download_neale_gwas]{download_neale_gwas()}} to download the GWAS summary-statistics file,
+then pass its local path as \code{s_bgzfile}.
+
+The variant annotation file is downloaded separately. The Neale Lab
+\code{variants.tsv.bgz} file is available at:
+\url{https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/annotations/variants.tsv.bgz}
+}
+
 \subsection{OpenGWAS authentication}{
 
-This function uses the \strong{ieugwasr} package to query the OpenGWAS API.
-Therefore, a valid OpenGWAS JSON Web Token (JWT) must be stored in the
-environment variable \code{OPENGWAS_JWT}.
+This function uses the \pkg{ieugwasr} package to query the OpenGWAS API.
+If the function's OpenGWAS query requires authentication, a valid OpenGWAS
+JSON Web Token (JWT) must be available in the \code{OPENGWAS_JWT}
+environment variable.
 
-To check whether a JWT has been configured, run:
+To check whether a JWT is configured, run:
 
 \preformatted{
 ieugwasr::get_opengwas_jwt()
 }
 
-If no token is returned or the existing token has expired:
-
+If a token is missing or expired:
 \enumerate{
-\item Log in to the OpenGWAS website and generate a new JWT token.
+\item Obtain a token from \url{https://api.opengwas.io}.
 \item Open your \code{.Renviron} file by running:
-
 \preformatted{
-  usethis::edit_r_environ()
-  }
-
+    usethis::edit_r_environ()
+    }
 \item Add or update the following line:
-
 \preformatted{
-  OPENGWAS_JWT="your_new_JWT_token"
-  }
-
+    OPENGWAS_JWT="your_new_JWT_token"
+    }
 \item Save the file and restart your R session.
 }
+
+Do not share or commit your JWT.
 }
 
 \subsection{Workflow}{
 
-The function performs the following steps:
-
+The function:
 \enumerate{
-\item Reads the source Neale Lab UK Biobank GWAS summary statistics.
-\item Filters SNPs according to the specified p-value threshold.
-\item Matches the selected SNPs with the SNP annotation file.
-\item Extracts SNP effect sizes to construct PRS weights.
-\item Writes the SNP weight file specified by \code{w_outfile}.
+\item Reads the source GWAS summary statistics from \code{s_bgzfile}.
+\item Selects SNPs according to \code{p_threshold}.
+\item Matches the selected SNPs to the annotation file in \code{annfile}.
+\item Extracts the information needed to construct PRS SNP weights.
+\item Writes the resulting weight file to \code{w_outfile}.
 }
 
-The generated SNP weight file can be used by downstream PRS functions to
-calculate polygenic risk scores in target Neale Lab UK Biobank GWAS
-datasets and test associations between PRS and target phenotypes.
+The output weight file can be used by downstream PRS functions, such as
+\code{\link[=test_prs_association]{test_prs_association()}}, to test associations in a target GWAS.
 }
 }
 \examples{
 \dontrun{
-## Verify that an OpenGWAS JWT has been configured
-ieugwasr::get_opengwas_jwt()
+## Download a source GWAS file with download_neale_gwas(), or download it
+## directly using a link from the Neale Lab manifest.
+download_neale_gwas(
+  pheno_code = "21001_irnt",
+  sex_groups = "female",
+  dest_dir = "gwas_data"
+)
 
-## Build a PRS weight file
+## Download variants.tsv.bgz separately from the Neale Lab annotation URL
+## documented above, then provide both local file paths.
 build_prs_weights(
-  s_bgzfile   = "source_gwas.txt.bgz",
+  s_bgzfile = "gwas_data/21001_irnt.gwas.imputed_v3.female.tsv.bgz",
   p_threshold = 5e-8,
-  annfile     = "neale_snp_annotation.txt",
-  w_outfile   = "prs_weights.txt"
+  annfile = "gwas_data/variants.tsv.bgz",
+  w_outfile = "prs_weights.txt",
+  pop = "EUR"
 )
 }
 
 }
 \seealso{
-ieugwasr::get_opengwas_jwt(),
-usethis::edit_r_environ()
+\code{\link[=download_neale_gwas]{download_neale_gwas()}},
+\code{\link[=test_prs_association]{test_prs_association()}},
+\code{ieugwasr::get_opengwas_jwt()},
+\code{usethis::edit_r_environ()}
 }

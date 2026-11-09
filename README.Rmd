@@ -18,9 +18,14 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The **CrossPRS** R package provides tools for constructing and testing polygenic risk scores (PRS) using GWAS summary statistics from the Neale Lab UK Biobank GWAS resource. 
+The **CrossPRS** R package provides tools for constructing and testing polygenic
+risk scores (PRS) using GWAS summary statistics from the Neale Lab UK Biobank
+GWAS resource. 
 
-Unlike conventional PRS analyses that require individual-level genotype and phenotype data, **CrossPRS** implements a summary-statistics-based association method that estimates the effect of a PRS on a target phenotype directly from GWAS summary statistics.
+Unlike conventional PRS analyses that require individual-level genotype and
+phenotype data, **CrossPRS** implements a summary-statistics-based association
+method that estimates the effect of a PRS on a target phenotype directly from
+GWAS summary statistics.
 
 ---
 
@@ -38,6 +43,9 @@ Unlike conventional PRS analyses that require individual-level genotype and phen
 Install the development version of `CrossPRS` from GitHub:
 
 ```r
+
 # install.packages("remotes")
-remotes::install_github("<YOUR-GITHUB-USERNAME>/CrossPRS", build_vignettes = TRUE)
+remotes::install_github("levimadison/CrossPRS", build_vignettes = TRUE)
+```
+
 
