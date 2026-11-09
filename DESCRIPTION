@@ -1,6 +1,6 @@
 Package: CrossPRS
 Title: Cross-GWAS Polygenic Risk Score Analysis
-Version: 1.1.0
+Version: 1.2.0
 Authors@R: 
     person("Levi", "Mei", , "levimei88@gmail.com", role = c("aut", "cre"))
 Description: Provides tools for polygenic risk score (PRS) analysis using
